@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/material.dart';
+import 'package:raffi_the_mensa_menu_bot/model/menu_item.dart' as mensa;
 import 'package:raffi_the_mensa_menu_bot/scraper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,13 +54,30 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<MenuItem> menu=[];
+  var menu=[];
   void fetchMenu() async {
-    List<MenuItem> menu= await scrapeMensaSite();
+    final prefs = await SharedPreferences.getInstance();
+    var menu= await scrapeMensaSite();
     if(menu.isEmpty){
-
+      // if there is already state it is automatically equal to the saved state.
+      if(this.menu.isNotEmpty){
+          return;
+        }
+      var menuStr =prefs.getString('menu');
+      if(menuStr==null){
+          return;
+        }
+        // Decode to list then decode the elements to their Respective class.
+      var stored_menu = json.decode(menuStr).map<mensa.MenuItem>((e)=>mensa.MenuItem.fromJson(e)).toList();
+      setState(() {
+              this.menu.addAll(stored_menu);
+            });
     }else{
-      this.menu=menu;  
+      prefs.setString('menu',jsonEncode(menu));
+      setState(() {
+              this.menu.clear();
+              this.menu.addAll(menu);
+            });
     }
   }
   @override
@@ -66,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   Future<void> initFetching() async{
     // Configure BackgroundFetch.
-    int status = await BackgroundFetch.configure(BackgroundFetchConfig(
+    await BackgroundFetch.configure(BackgroundFetchConfig(
           minimumFetchInterval: 8*60, // Fetch every 8 hours min.
           stopOnTerminate: false,
           enableHeadless: true,
@@ -76,19 +97,18 @@ class _MyHomePageState extends State<MyHomePage> {
           requiresDeviceIdle: false,
           requiredNetworkType: NetworkType.NOT_ROAMING
           ), (String taskId) async {
-        // TODO: fetch initial state
         fetchMenu();
         // IMPORTANT:  You must signal completion of your task or the OS can punish your app
         // for taking too long in the background.
         BackgroundFetch.finish(taskId);
         }, (String taskId) async {  
-        //TODO: fetch initial State
-        fetchMenu();
         // This task has exceeded its allowed running-time.  You must stop what you're doing and immediately .finish(taskId)
         print("[BackgroundFetch] TASK TIMEOUT taskId: $taskId");
         BackgroundFetch.finish(taskId);
         });
 
+        //fetch initial State
+        fetchMenu();
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
@@ -133,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 'You have pushed the button this many times:',
                 ),
               Text(
-                'counter',
+                "${menu.length}",
                 style: Theme.of(context).textTheme.headline4,
                 ),
               ],

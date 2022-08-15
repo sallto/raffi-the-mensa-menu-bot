@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'package:raffi_the_mensa_menu_bot/model/menu_item.dart';
 
 Future scrapeMensaSite() async {
+    try{
     // Make API Call
     Response r = await Client().get(Uri.parse('https://www.studentenwerk-muenchen.de/mensa/speiseplan/speiseplan_422_-de.html#heute'));
     if(r.statusCode!=200){
@@ -21,4 +22,7 @@ Future scrapeMensaSite() async {
       // Fix bad encoding on original site
       .map((e) => utf8.decode(latin1.encode(e),allowMalformed: true));
       return  IterableZip([dishes,categories]).map((e) => MenuItem(e[0],e[1])).toList();
+    } catch (e){
+      return [];
+    }
   }
