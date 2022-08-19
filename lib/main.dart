@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:raffi_the_mensa_menu_bot/model/menu_item.dart' as mensa;
 import 'package:raffi_the_mensa_menu_bot/scraper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,35 +20,15 @@ class MyApp extends StatelessWidget {
       return MaterialApp(
           title: 'Flutter Demo',
           theme: ThemeData(
-            // This is the theme of your application.
-            //
-            // Try running your application with "flutter run". You'll see the
-            // application has a blue toolbar. Then, without quitting the app, try
-            // changing the primarySwatch below to Colors.green and then invoke
-            // "hot reload" (press "r" in the console where you ran "flutter run",
-            // or simply save your changes to "hot reload" in a Flutter IDE).
-            // Notice that the counter didn't reset back to zero; the application
-            // is not restarted.
-            primarySwatch: Colors.blue,
+            primaryColor: Color.fromRGBO(58, 66, 86, 1.0), fontFamily: 'Raleway'
             ),
-          home: const MyHomePage(title: 'Flutter Demo Home Page'),
+          home: const MyHomePage(),
           );
     }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
     State<MyHomePage> createState() => _MyHomePageState();
@@ -61,23 +42,23 @@ class _MyHomePageState extends State<MyHomePage> {
     if(menu.isEmpty){
       // if there is already state it is automatically equal to the saved state.
       if(this.menu.isNotEmpty){
-          return;
-        }
+        return;
+      }
       var menuStr =prefs.getString('menu');
       if(menuStr==null){
-          return;
-        }
-        // Decode to list then decode the elements to their Respective class.
+        return;
+      }
+      // Decode to list then decode the elements to their Respective class.
       var stored_menu = json.decode(menuStr).map<mensa.MenuItem>((e)=>mensa.MenuItem.fromJson(e)).toList();
       setState(() {
-              this.menu.addAll(stored_menu);
-            });
+          this.menu.addAll(stored_menu);
+          });
     }else{
       prefs.setString('menu',jsonEncode(menu));
       setState(() {
-              this.menu.clear();
-              this.menu.addAll(menu);
-            });
+          this.menu.clear();
+          this.menu.addAll(menu);
+          });
     }
   }
   @override
@@ -107,8 +88,8 @@ class _MyHomePageState extends State<MyHomePage> {
         BackgroundFetch.finish(taskId);
         });
 
-        //fetch initial State
-        fetchMenu();
+    //fetch initial State
+    fetchMenu();
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
@@ -117,48 +98,56 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
     Widget build(BuildContext context) {
-      // This method is rerun every time setState is called, for instance as done
-      // by the _incrementCounter method above.
-      //
-      // The Flutter framework has been optimized to make rerunning build methods
-      // fast, so that you can just rebuild anything that needs updating rather
-      // than having to individually change instances of widgets.
-      return Scaffold(
-          appBar: AppBar(
-            // Here we take the value from the MyHomePage object that was created by
-            // the App.build method, and use it to set our appbar title.
-            title: Text(widget.title),
+      IconData getIcon(String category){switch(category){
+          case "Suppe":
+            return Icons.soup_kitchen;
+          case "Pizza":
+            return Icons.local_pizza;
+          case "Pasta":
+            return MaterialCommunityIcons.pasta;
+          case "Grill":
+            return Icons.outdoor_grill;
+          case "Wok":
+            return MaterialCommunityIcons.bowl;
+          case "Vegetarisch":
+            return MaterialCommunityIcons.carrot;
+          case "Fleisch":
+            return MaterialCommunityIcons.pig;
+          case "Studitopf":
+            return MaterialCommunityIcons.pot_mix;
+          case "Süßspeise":
+            return MaterialCommunityIcons.ice_cream;
+          case "Fisch":
+            return MaterialCommunityIcons.fish;
+          default:
+            return Icons.key;
+        }};
+      ListTile makeListTile(mensa.MenuItem item) => ListTile(contentPadding: EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
+          leading: Container(
+            padding: EdgeInsets.only(right: 10.0),
+            decoration: new BoxDecoration(border: Border(right: new BorderSide(width: 1.0,color: Colors.white24))),
+            child: Icon(getIcon(item.category),color: Colors.white,),
             ),
-          body: Center(
-            // Center is a layout widget. It takes a single child and positions it
-            // in the middle of the parent.
-            child: Column(
-              // Column is also a layout widget. It takes a list of children and
-              // arranges them vertically. By default, it sizes itself to fit its
-              // children horizontally, and tries to be as tall as its parent.
-              //
-              // Invoke "debug painting" (press "p" in the console, choose the
-              // "Toggle Debug Paint" action from the Flutter Inspector in Android
-              // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-              // to see the wireframe for each widget.
-              //
-              // Column has various properties to control how it sizes itself and
-              // how it positions its children. Here we use mainAxisAlignment to
-              // center the children vertically; the main axis here is the vertical
-              // axis because Columns are vertical (the cross axis would be
-              // horizontal).
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-              const Text(
-                'You have pushed the button this many times:',
-                ),
-              Text(
-                "${menu.length}",
-                style: Theme.of(context).textTheme.headline4,
-                ),
-              ],
-              ),
-              ),
-              );
+          title: Text(item.dish,
+            style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+          );
+      Card makeCard(mensa.MenuItem item)=>Card(elevation: 8.0,margin:EdgeInsets.symmetric(horizontal: 10.0,vertical: 6.0),
+          child: Container(decoration: BoxDecoration(color: Color.fromRGBO(64,75,96,.9)),child: makeListTile(item)));
+
+      final bodyContent= Container(
+          child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: menu.length,
+          itemBuilder: ((context, index) {
+              return makeCard(this.menu[index]);
+              })),
+          );
+
+          final topBar=AppBar(elevation: 0.1,
+          backgroundColor: Color.fromRGBO(58, 66, 86, 1.0),
+          title: Text("Mensa Menu Fetcher"),
+          centerTitle: true,
+          );
+      return Scaffold(backgroundColor: Color.fromRGBO(58,66,86,1.0),appBar: topBar,body: bodyContent,);
     }
 }
