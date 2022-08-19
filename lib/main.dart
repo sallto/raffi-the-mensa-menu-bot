@@ -18,46 +18,47 @@ class MyApp extends StatelessWidget {
   @override
     Widget build(BuildContext context) {
       return MaterialApp(
-          title: 'Flutter Demo',
+          title: 'Mensa Menu fetcher',
           theme: ThemeData(
             primaryColor: Color.fromRGBO(58, 66, 86, 1.0), fontFamily: 'Raleway'
             ),
-          home: const MyHomePage(),
+          home: const MenuPage(),
           );
     }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+class MenuPage extends StatefulWidget {
+  const MenuPage({Key? key}) : super(key: key);
 
   @override
-    State<MyHomePage> createState() => _MyHomePageState();
+    State<MenuPage> createState() => _MenuPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MenuPageState extends State<MenuPage> {
   var menu=[];
   void fetchMenu() async {
     final prefs = await SharedPreferences.getInstance();
-    var menu= await scrapeMensaSite();
-    if(menu.isEmpty){
+    var webMenu= await scrapeMensaSite();
+    if(webMenu.isEmpty){
       // if there is already state it is automatically equal to the saved state.
-      if(this.menu.isNotEmpty){
+      if(menu.isNotEmpty){
         return;
       }
-      var menuStr =prefs.getString('menu');
-      if(menuStr==null){
+      var menuString =prefs.getString('menu');
+      if(menuString==null){
         return;
       }
       // Decode to list then decode the elements to their Respective class.
-      var stored_menu = json.decode(menuStr).map<mensa.MenuItem>((e)=>mensa.MenuItem.fromJson(e)).toList();
+      var storedMenu = json.decode(menuString).map<mensa.MenuItem>((e)=>mensa.MenuItem.fromJson(e)).toList();
       setState(() {
-          this.menu.addAll(stored_menu);
+        // no need to clear since it has to be empty if this code path is reached
+          menu.addAll(storedMenu);
           });
     }else{
-      prefs.setString('menu',jsonEncode(menu));
+      prefs.setString('menu',jsonEncode(webMenu));
       setState(() {
-          this.menu.clear();
-          this.menu.addAll(menu);
+          menu.clear();
+          menu.addAll(webMenu);
           });
     }
   }
@@ -79,11 +80,9 @@ class _MyHomePageState extends State<MyHomePage> {
           requiredNetworkType: NetworkType.NOT_ROAMING
           ), (String taskId) async {
         fetchMenu();
-        // IMPORTANT:  You must signal completion of your task or the OS can punish your app
-        // for taking too long in the background.
+        // Signal compleation to OS
         BackgroundFetch.finish(taskId);
         }, (String taskId) async {  
-        // This task has exceeded its allowed running-time.  You must stop what you're doing and immediately .finish(taskId)
         print("[BackgroundFetch] TASK TIMEOUT taskId: $taskId");
         BackgroundFetch.finish(taskId);
         });
@@ -125,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ListTile makeListTile(mensa.MenuItem item) => ListTile(contentPadding: EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
           leading: Container(
             padding: EdgeInsets.only(right: 10.0),
-            decoration: new BoxDecoration(border: Border(right: new BorderSide(width: 1.0,color: Colors.white24))),
+            decoration: BoxDecoration(border: Border(right: BorderSide(width: 1.0,color: Colors.white24))),
             child: Icon(getIcon(item.category),color: Colors.white,),
             ),
           title: Text(item.dish,
