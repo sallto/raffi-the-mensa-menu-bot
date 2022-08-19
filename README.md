@@ -1,16 +1,30 @@
-# raffi_the_mensa_menu_bot
+# Mensa Bot
 
-A new Flutter project.
+As a hungry student I am always annoyed how poor the internet connection is whilst going from a lecture to the mensa (german for cafeteria). 
 
-## Getting Started
+As such I wanted a way to fetch the menu for the day in advance and present it in a nice user interface.
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+## Screenshots
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+![App Screenshot](Screenshot_1660935305_google-pixel5-sortasage-portrait.png)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+## Features
+
+- Cross platform
+- Offline use
+- Periodic menu fetching
+- Nice UI
+- Parsing of the mensa webpage to get the current menu
+
+
+
+## Lessons Learned
+
+Cross platform app development is hard. This project started as a PWA turned into a expo app, but all the while the background fetching was extremely cumbersome and unreliable.
+
+Only with Flutter the system worked properly.
+
+- Take more time to scout solutions instead of blindly commiting
+- Do not try to make a pretty UI before perfecting the functionality
